@@ -1,4 +1,5 @@
 import { test, expect } from 'claude-code/testing'
+import { formatStatus, tokensSaved } from './lib.ts'
 
 const SHOT = 'mcp__Claude_Browser__computer'
 const BATCH = 'mcp__Claude_Browser__browser_batch'
@@ -92,4 +93,40 @@ test('a stale-view click error gets a hint to click by ref', async ($, on) => {
   }))
   const res = await $.tool.call({ tool: SHOT, action: 'left_click', coordinate: [1, 1] })
   expect(String(res.context)).toContain('click by ref')
+})
+
+test('a hidden-ref error gets a hint to reveal the element first', async ($, on) => {
+  on('tool.call', { tool: SHOT }, () => ({
+    isError: true as const,
+    result: undefined,
+    text: 'ref ref_58 is entirely outside the viewport (center (0, 0)) — likely hidden or off-canvas',
+  }))
+  const res = await $.tool.call({ tool: SHOT, action: 'left_click', ref: 'ref_58' })
+  expect(String(res.context)).toContain('search icon or menu button')
+})
+
+test('a find with many matches gets a be-specific hint, a narrow one does not', async ($, on) => {
+  const FIND = 'mcp__Claude_Browser__find'
+  let matches = 20
+  on('tool.call', { tool: FIND }, () => ({ result: 'ok', text: `Found ${matches} match(es) for "x":` }))
+  const broad = await $.tool.call({ tool: FIND, query: 'information theory' })
+  matches = 1
+  const narrow = await $.tool.call({ tool: FIND, query: 'is the mathematical study' })
+  expect(String(broad.context)).toContain('find returned 20 matches')
+  expect(narrow.context).toBe(undefined)
+})
+
+test('tokensSaved counts only the screenshots the mod scaled', () => {
+  const text =
+    'Screenshot size: 480x365 0.6-scale view; coordinate frame: 800x609.\n' +
+    'Screenshot size: 480x365 0.6-scale view; coordinate frame: 800x609.'
+  // 800 × 609 / 750 ≈ 650 tokens at full size, 64% of it saved per screenshot.
+  expect(tokensSaved(text, 1)).toBe(416)
+  expect(tokensSaved(text, 2)).toBe(831)
+  expect(tokensSaved(text, 0)).toBe(0)
+})
+
+test('formatStatus shows savings only once there are some', () => {
+  expect(formatStatus(3, 1, 0)).toBe('browser 3 calls · 1 batched')
+  expect(formatStatus(3, 1, 1250)).toBe('browser 3 calls · 1 batched · ~1.3k tokens saved')
 })
