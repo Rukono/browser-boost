@@ -42,3 +42,54 @@ test('three single calls in a row nudge toward browser_batch', async ($, on) => 
   expect(a.context).toBe(undefined)
   expect(String(c.context)).toContain('browser_batch')
 })
+
+test('a coordinate click right after navigate in a batch is refused before it runs', async ($, on) => {
+  let ran = false
+  on('tool.call', { tool: BATCH }, () => {
+    ran = true
+    return { result: 'ok' }
+  })
+  const res = await $.tool.call({
+    tool: BATCH,
+    actions: [
+      { name: 'navigate', input: { url: 'example.com' } },
+      { name: 'computer', input: { action: 'left_click', coordinate: [400, 588] } },
+    ],
+  })
+  expect(ran).toBe(false)
+  expect(String(res.deny)).toContain('click by ref')
+})
+
+test('a batch with a screenshot or a ref click after navigate runs', async ($, on) => {
+  let runs = 0
+  on('tool.call', { tool: BATCH }, () => {
+    runs++
+    return { result: 'ok' }
+  })
+  await $.tool.call({
+    tool: BATCH,
+    actions: [
+      { name: 'navigate', input: { url: 'example.com' } },
+      { name: 'computer', input: { action: 'screenshot' } },
+      { name: 'computer', input: { action: 'left_click', coordinate: [1, 1] } },
+    ],
+  })
+  await $.tool.call({
+    tool: BATCH,
+    actions: [
+      { name: 'navigate', input: { url: 'example.com' } },
+      { name: 'computer', input: { action: 'left_click', ref: 'ref_7' } },
+    ],
+  })
+  expect(runs).toBe(2)
+})
+
+test('a stale-view click error gets a hint to click by ref', async ($, on) => {
+  on('tool.call', { tool: SHOT }, () => ({
+    isError: true as const,
+    result: undefined,
+    text: 'left_click: this tab has loaded a different site or document that you have not screenshotted yet',
+  }))
+  const res = await $.tool.call({ tool: SHOT, action: 'left_click', coordinate: [1, 1] })
+  expect(String(res.context)).toContain('click by ref')
+})

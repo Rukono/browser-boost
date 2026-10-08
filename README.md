@@ -13,6 +13,11 @@ A Claude Code mod that makes Claude cheaper and faster at driving a browser
   0.6 scale (about 64% fewer image tokens). This applies inside `browser_batch`
   too. Click coordinates stay in the full-size frame, and an explicit `scale`
   is left alone.
+- **Stale-view guard**: a `browser_batch` that clicks by pixel coordinate right
+  after a `navigate`, with no screenshot in between, is refused before any step
+  runs, because the browser would reject that click. Claude is told to look up
+  the element with `find` and click by ref instead. A single coordinate click
+  that fails for the same reason gets the same hint.
 - **Batch nudge**: after 3 single browser calls in a row, Claude gets a
   reminder to group its next steps into one `browser_batch` call.
 - **Status line**: shows `browser N calls · M batched`.
