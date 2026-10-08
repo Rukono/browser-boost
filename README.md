@@ -1,5 +1,6 @@
 # browser-boost
-n[![test](https://github.com/Rukono/browser-boost/actions/workflows/test.yml/badge.svg)](https://github.com/Rukono/browser-boost/actions/workflows/test.yml)
+
+[![test](https://github.com/Rukono/browser-boost/actions/workflows/test.yml/badge.svg)](https://github.com/Rukono/browser-boost/actions/workflows/test.yml)
 
 A Claude Code mod that makes Claude cheaper and faster at driving a browser
 (the built-in browser pane, Claude in Chrome, or Playwright MCP).
