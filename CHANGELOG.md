@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- Tokens-saved count now covers every scaled screenshot, measured against
+  its full size from the result's own scale and frame, whoever set the
+  scale. Before, it counted only screenshots the mod itself scaled, so it
+  read zero when the model passed a scale or another copy of the mod ran.
+
 ## 0.3.0
 
 - Recovery hints: hidden element ("outside the viewport"), stale view after

@@ -31,12 +31,9 @@ export const register: Register = on => {
     const name = e.tool.replace(BROWSER, '')
     const isBatching = BATCHING.test(e.tool)
     let input = e
-    let scaled = 0
 
     if (isBatching && name === 'computer') {
-      const rewritten = withScale(e as Record<string, unknown>)
-      if (rewritten !== e) scaled = 1
-      input = rewritten as typeof e
+      input = withScale(e as Record<string, unknown>) as typeof e
     } else if (isBatching && name === 'browser_batch' && Array.isArray(e.actions)) {
       // The browser refuses a coordinate click on a page it hasn't screenshotted; catch it before any step runs.
       const stale = staleCoordinateAction(e.actions as Action[])
@@ -45,12 +42,9 @@ export const register: Register = on => {
           deny: `browser-boost: actions[${stale}] clicks by coordinate after a navigate with no screenshot in between, so it would fail. Batch navigate + find first, then click by ref in a second batch.`,
         }
       }
-      const actions = (e.actions as Action[]).map(a => {
-        if (a.name !== 'computer' || !a.input) return a
-        const rewritten = withScale(a.input)
-        if (rewritten !== a.input) scaled++
-        return { ...a, input: rewritten }
-      })
+      const actions = (e.actions as Action[]).map(a =>
+        a.name === 'computer' && a.input ? { ...a, input: withScale(a.input) } : a,
+      )
       input = { ...e, actions } as typeof e
     }
 
@@ -59,7 +53,7 @@ export const register: Register = on => {
 
     const text = ran.text ?? ''
     calls++
-    saved += tokensSaved(text, scaled)
+    saved += tokensSaved(text)
     if (name === 'browser_batch') {
       batched++
       streak = 0

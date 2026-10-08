@@ -55,15 +55,16 @@ export const staleCoordinateAction = (actions: readonly Action[]) => {
 const imageTokens = (w: number, h: number) => (w * h) / 750
 
 /**
- * Tokens saved by the first `count` screenshots this mod scaled, read off the
- * "coordinate frame: WxH" the browser reports for each scaled screenshot.
+ * Tokens saved against full-size screenshots, read off each scaled screenshot's
+ * "<scale>-scale view; coordinate frame: WxH" line, whoever set the scale.
  */
-export const tokensSaved = (text: string, count: number) => {
-  const frames = [...text.matchAll(/scale view; coordinate frame: (\d+)x(\d+)/g)].slice(0, count)
-  return Math.round(
-    frames.reduce((sum, [, w, h]) => sum + imageTokens(+w, +h) * (1 - SCREENSHOT_SCALE ** 2), 0),
+export const tokensSaved = (text: string) =>
+  Math.round(
+    [...text.matchAll(/([\d.]+)-scale view; coordinate frame: (\d+)x(\d+)/g)].reduce(
+      (sum, [, s, w, h]) => sum + imageTokens(+w, +h) * (1 - Math.min(+s, 1) ** 2),
+      0,
+    ),
   )
-}
 
 /** The match count of a find result, or 0. */
 export const findMatches = (text: string) => Number(/Found (\d+) match/.exec(text)?.[1] ?? 0)

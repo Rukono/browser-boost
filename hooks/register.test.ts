@@ -116,14 +116,14 @@ test('a find with many matches gets a be-specific hint, a narrow one does not', 
   expect(narrow.context).toBe(undefined)
 })
 
-test('tokensSaved counts only the screenshots the mod scaled', () => {
-  const text =
+test('tokensSaved counts every scaled screenshot against its full size', () => {
+  const two =
     'Screenshot size: 480x365 0.6-scale view; coordinate frame: 800x609.\n' +
-    'Screenshot size: 480x365 0.6-scale view; coordinate frame: 800x609.'
-  // 800 × 609 / 750 ≈ 650 tokens at full size, 64% of it saved per screenshot.
-  expect(tokensSaved(text, 1)).toBe(416)
-  expect(tokensSaved(text, 2)).toBe(831)
-  expect(tokensSaved(text, 0)).toBe(0)
+    'Successfully captured screenshot (941x463, jpeg) — 0.6-scale view; coordinate frame: 1568x772.'
+  // 800 × 609 / 750 ≈ 650 tokens at full size, 64% saved; 1568 × 772 / 750 ≈ 1614, 64% saved.
+  expect(tokensSaved(two)).toBe(416 + 1033)
+  expect(tokensSaved('Screenshot size: 400x305 0.5-scale view; coordinate frame: 800x609.')).toBe(487)
+  expect(tokensSaved('Screenshot size: 800x609')).toBe(0)
 })
 
 test('formatStatus shows savings only once there are some', () => {
