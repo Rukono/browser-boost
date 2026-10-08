@@ -1,0 +1,6 @@
+{
+  "name": "browser-boost",
+  "owner": { "name": "Rukono" },
+  "description": "Makes Claude Code faster and cheaper at driving a browser.",
+  "plugins": [{ "name": "browser-boost", "source": "./" }]
+}
